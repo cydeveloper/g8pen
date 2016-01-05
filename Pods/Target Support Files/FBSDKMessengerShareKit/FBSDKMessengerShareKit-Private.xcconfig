@@ -1,0 +1,5 @@
+#include "FBSDKMessengerShareKit.xcconfig"
+GCC_PREPROCESSOR_DEFINITIONS = $(inherited) COCOAPODS=1
+HEADER_SEARCH_PATHS = "${PODS_ROOT}/Headers/Private" "${PODS_ROOT}/Headers/Private/FBSDKMessengerShareKit" "${PODS_ROOT}/Headers/Private/FBSDKMessengerShareKit/FBSDKMessengerShareKit" "${PODS_ROOT}/Headers/Public" "${PODS_ROOT}/Headers/Public/AFNetworking" "${PODS_ROOT}/Headers/Public/Bolts" "${PODS_ROOT}/Headers/Public/FBSDKCoreKit" "${PODS_ROOT}/Headers/Public/FBSDKLoginKit" "${PODS_ROOT}/Headers/Public/FBSDKLoginKit/FBSDKLoginKit" "${PODS_ROOT}/Headers/Public/FBSDKMessengerShareKit" "${PODS_ROOT}/Headers/Public/FBSDKMessengerShareKit/FBSDKMessengerShareKit" "${PODS_ROOT}/Headers/Public/MBProgressHUD" "${PODS_ROOT}/Headers/Public/PayPal-iOS-SDK" "${PODS_ROOT}/Headers/Public/ZXingObjC" "${PODS_ROOT}/Headers/Public/iOS-Color-Picker"
+PODS_ROOT = ${SRCROOT}
+SKIP_INSTALL = YES

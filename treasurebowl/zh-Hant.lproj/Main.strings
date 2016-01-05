@@ -1,0 +1,27 @@
+
+/* Class = "UIButton"; normalTitle = "QRCode"; ObjectID = "BEK-vf-nly"; */
+"BEK-vf-nly.normalTitle" = "QRCode";
+
+/* Class = "UILabel"; text = "Name"; ObjectID = "Eko-fe-lAx"; */
+"Eko-fe-lAx.text" = "Name";
+
+/* Class = "UILabel"; text = "Phone1"; ObjectID = "Lmc-Oq-DaO"; */
+"Lmc-Oq-DaO.text" = "Phone1";
+
+/* Class = "UILabel"; text = "Label"; ObjectID = "TPd-VJ-MRB"; */
+"TPd-VJ-MRB.text" = "Label";
+
+/* Class = "UIViewController"; title = "CashVC"; ObjectID = "iQH-jc-ZvG"; */
+"iQH-jc-ZvG.title" = "CashVC";
+
+/* Class = "UILabel"; text = "Phone2"; ObjectID = "nJk-Ci-2gQ"; */
+"nJk-Ci-2gQ.text" = "Phone2";
+
+/* Class = "UILabel"; text = "CardID"; ObjectID = "tO6-dX-YPl"; */
+"tO6-dX-YPl.text" = "CardID";
+
+/* Class = "UIButton"; normalTitle = "Submit"; ObjectID = "wEA-Hk-XCW"; */
+"wEA-Hk-XCW.normalTitle" = "Submit";
+
+/* Class = "UIButton"; normalTitle = "Start scan"; ObjectID = "yKO-qK-0Zd"; */
+"yKO-qK-0Zd.normalTitle" = "Start scan";

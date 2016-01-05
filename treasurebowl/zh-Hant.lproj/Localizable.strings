@@ -1,0 +1,27 @@
+/* 
+  Localizable.strings
+  treasurebowl
+
+  Created by AtSu on 2015/9/28.
+  Copyright (c) 2015年 AtSu. All rights reserved.
+*/
+
+
+/* Alert */
+"Warning" = "警告";
+"Are you sure you want to delete this?" = "您確定要刪除這個Icon嗎？";
+"%lu phone numbers is required!" = "需要再輸入 %lu 隻電話號碼才能撥號";
+"Start Calling" = "雲端伺服器接線中...";
+"Oops!" = "哎呀！";
+"Your device is not connected to the network" = "您的裝置並未連上網路";
+"Creating shortcut for you ..." = "為您產生桌面捷徑中...";
+"Cannot connect to server, please try it later ..." = "無法連上伺服器，請稍候再嘗試 ...";
+"The card is out of cash!" = "卡號裡面沒有餘額了！";
+"Success!" = "撥號成功！";
+"The call will come in in just a few second!" = "您馬上就會接到電話囉！";
+"Please at least tell us the CardID and the Name." = "請至少輸入您的Icon名字跟卡號喔";
+"Creating icon for you" = "為您製造Icon中...";
+"The card you offer does not exits, please make sure if you have entered the correct card ID."
+= "您提供的卡號不存在，請確定您是否輸入了正確的卡號";
+"The card you offer does not have enough cash!" = "您提供的卡號餘額不足喔！";
+
