@@ -77,10 +77,9 @@
 }
 
 - (UIImage*)getImage {
-    //NSArray* path = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    //NSString* filePath = [[path objectAtIndex:0] stringByAppendingString: self.name];
-    UIImage* image = [[UIImage alloc] initWithContentsOfFile:self.icon_url];
-    NSLog(@"gett %@", self.icon_url);
+    NSArray* path = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString* filePath = [[path objectAtIndex:0] stringByAppendingPathComponent: self.name];
+    UIImage* image = [[UIImage alloc] initWithContentsOfFile: filePath];
     return image;
 }
 
