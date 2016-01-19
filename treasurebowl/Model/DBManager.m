@@ -366,6 +366,12 @@ static NSString* text_spliter = @"&_\"Q&";
     return card;
 }
 
+/**
+ * getCards - retrieve all card from database
+ *
+ * RETURN: an array contains cards
+ */
+
 - (NSArray*)getCards {
     
     NSMutableArray* cards = nil;
@@ -385,22 +391,37 @@ static NSString* text_spliter = @"&_\"Q&";
 
 #pragma mark generalQuery methods
 
+/**
+ * doQuery - perform a database query with specific database statement.
+ * @query: query that specify db operation.
+ * @params: parameter in the @query
+ *
+ * RETURN: success or failed
+ *
+ * To avoid things like SQL injection, we have to separate the statement and parameter,
+ * and use bind to bind parameter with it. The binding process will ensure the things
+ * save into db is valid.
+ */
+
 - (BOOL)doQuery:(const char*)query withParam:(NSArray*) params {
     
     BOOL result = YES;
     const char* dbPath_char = [dbPath UTF8String];
     
     if(sqlite3_open(dbPath_char, &db) == SQLITE_OK) {
-        
+        // open db and prepare it.
         sqlite3_prepare_v2(db, query, -1, &db_stmt, NULL);
-        param_binder(params);
         
+        param_binder(params); // bind parameter.
+        
+        
+        // sqlite3_step will execute statement
         if(sqlite3_step(db_stmt) == SQLITE_ERROR) {
             C_FAIL("doQuery");
             result = NO;
         }
         
-        sqlite3_finalize(db_stmt);
+        sqlite3_finalize(db_stmt); // finish statement
         sqlite3_close(db);
     } else {
         C_FAIL("open DB");
@@ -409,6 +430,18 @@ static NSString* text_spliter = @"&_\"Q&";
     
     return result;
 }
+
+
+/**
+ * doRowQuery - retrieve a data row from database
+ * @query: query that specify db operation.
+ * @name: name of row you want to retrieve
+ *
+ * RETURN: NSArray contain row data, or rows data
+ *
+ * also use bind to avoid injection. It will check db_stmt to
+ * determine whether we need to retrieve all rows or just one row.
+ */
 
 - (NSArray*)doRowQuery:(const char*)query withName:(NSString*)name {
     
@@ -430,7 +463,9 @@ static NSString* text_spliter = @"&_\"Q&";
         list = [[NSMutableArray alloc] init];
         
         while(sqlite3_step(db_stmt) == SQLITE_ROW) {
+            // will keep stepping if the db_stmt want to retrieve many row.
             
+            // count how many cols are there in current row.
             int cols = sqlite3_column_count(db_stmt);
             row = [[NSMutableDictionary alloc] init];
             
@@ -439,6 +474,8 @@ static NSString* text_spliter = @"&_\"Q&";
                 NSString* NS_col_name = [NSString stringWithCString: col_name encoding: NSUTF8StringEncoding];
                 int type = sqlite3_column_type(db_stmt, i);
                 
+                // decode each column, and put them back to dictionary "row"
+                // by there column name
                 switch(type) {
                     case SQLITE_INTEGER: {
                         int num = sqlite3_column_int(db_stmt, i);
@@ -476,6 +513,13 @@ static NSString* text_spliter = @"&_\"Q&";
 
 
 #pragma mark util
+/**
+ * param_binder - bind parameter to db_stmt
+ * @params: params that need to bind to db_stmt
+ *
+ * To avoid SQL injection
+ */
+
 
 static inline void param_binder(NSArray* params) {
     
@@ -484,6 +528,7 @@ static inline void param_binder(NSArray* params) {
     for(id param in params) {
         
         cnt ++;
+        // check type of each parameter, and bind it to db_stmt
         if([param isKindOfClass: [NSString class]]) {
             // NSLog(@"param %d : NSString : %@", cnt, param);
             sqlite3_bind_text(db_stmt, cnt, [(NSString*)param UTF8String], -1, NULL);
@@ -504,6 +549,13 @@ static inline void param_binder(NSArray* params) {
         
     }
 }
+
+/**
+ * the following two function is used to turn array into a string,
+ * or turn string back to an array. Sometimes we want to save a unknown
+ * length or similar property, so we will put this kind of attribute in same NSArray,
+ * and encode it as a stirng and store in db.
+ */
 
 + (NSString*)splitArrayToText:(NSMutableArray *)phone_num {
     // Utility for spliting phone_num array to text form that  are suit for DB.
