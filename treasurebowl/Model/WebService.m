@@ -295,6 +295,17 @@ static NSString* AESKEY = @"thisistreasureshthisistreasuresh";
     [op start];
 }
 
+
+/**
+ * createQRCodeURL - call server API to make a qrcode
+ * @delegate: the delegation view controller we will inform later
+ * @icon: Icon that will be encoded in qrcode
+ *
+ * Send icon data in the same data format of the treasurebowl web page.
+ * CSRF token is needed.
+ * It takes about 10sec to create a QRcode.
+ */
+
 - (void)createQRCodeURL:(id<WebserviceDelegate>)delegate Icon:(Icon *)icon {
     
     AFHTTPRequestOperationManager *httpManager = [AFHTTPRequestOperationManager manager];
@@ -306,6 +317,7 @@ static NSString* AESKEY = @"thisistreasureshthisistreasuresh";
         NSString* phone_1 = @"";
         NSString* phone_2 = @"";
         
+        // check number of phones to avoid sending invalid phone number
         if([icon.phone_num objectAtIndex:0]) {
             phone_1 = [icon.phone_num objectAtIndex:0];
         }
@@ -314,6 +326,8 @@ static NSString* AESKEY = @"thisistreasureshthisistreasuresh";
             phone_2 = [icon.phone_num objectAtIndex:1];
         }
         
+        // put all the data into the data form.
+        // "iconfile", "yourphone", "friendphone" and "name" is the essential components.
         [formdata appendPartWithFileData:imageData name:@"iconfile" fileName: imagename mimeType:@"image/*"];
         [formdata appendPartWithFormData:[icon.card_ID dataUsingEncoding:NSUTF8StringEncoding] name:@"cardnumber"];
         [formdata appendPartWithFormData:[@"" dataUsingEncoding:NSUTF8StringEncoding] name:@"friendemail"];
@@ -332,26 +346,47 @@ static NSString* AESKEY = @"thisistreasureshthisistreasuresh";
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         DE_LOG("resp %@", operation.responseString);
         NSLog(@"Error: %@", error);
+        
+        // call delegation method
         [delegate createQRCodeURLReturn: NULL ErrorStatus: connectionFailed];
     }];
 }
+
+/**
+ * getOriginalPicture - retrieve the original picture from QRcode
+ * @delegate: the delegation view controller we will inform later
+ * @picName: use pic name to find the picture on server.
+ * @icon: icon which the returning picture belongs to
+ *
+ * We need to retrieve image data from url encoded in QRcode.
+ */
 
 - (void)getOriginalPicture:(id<WebserviceDelegate>)delegate PictureName:(NSString *)picName Icon:(Icon*) icon {
     NSString* targetURL = [NSString stringWithFormat:@"%@%@", TREASUREBOWL_ICON_URL_BASE, picName];
     AFHTTPRequestOperationManager *op = [AFHTTPRequestOperationManager manager];
     op.responseSerializer = [AFHTTPResponseSerializer serializer];
     DE_LOG("send %@", targetURL);
+    
     [op GET: targetURL parameters:NULL success:^(AFHTTPRequestOperation *operation, id responseObject) {
         NSData* data = responseObject;
-        //DE_LOG("%@",data);
+
+        // if retrieve success, stor it.
         [delegate storeQRIcon:icon imgData:data];
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         DE_LOG("failed!");
-
+        // unhandled
     }];
 
 }
+
+/**
+ * getQRcodePicture - retrieve the encoded QRCode picture
+ * @delegate: the delegation view controller we will inform later
+ * @url: target url
+ *
+ * After we create the QRCode successfully, we need to take it back from server.
+ */
 
 - (void)getQRcodePicture:(id<WebserviceDelegate>)delegate URL:(NSString*) url {
     AFHTTPRequestOperationManager *op = [AFHTTPRequestOperationManager manager];
@@ -372,6 +407,12 @@ static NSString* AESKEY = @"thisistreasureshthisistreasuresh";
     } ];
 }
 
+/**
+ * requestCSRFToken - request CSRF token from treasurebowl web.
+ *
+ * We cannot post form or perform operation related to treasurebowl web page
+ * without this token. The token will be stored in WebService instance.
+ */
 
 - (void)requestCSRFToken {
     AFHTTPRequestOperationManager *op = [AFHTTPRequestOperationManager manager];
@@ -558,10 +599,28 @@ static NSString* AESKEY = @"thisistreasureshthisistreasuresh";
     return [[unfilter_string componentsSeparatedByCharactersInSet:illegal_char] componentsJoinedByString:@"ux"];
 }
 
+/**
+ * generateQRCodePostfix - To avoid photo name conflict on the qrcode server, we have to add a postfix
+ *
+ * RETURN: a NSString of posfix
+ *
+ * Generate a postfix
+ * WARNING: should be encoded in a formal way.
+ */
+
 + (NSString*)generateQRCodePostfix {
     NSString* result = [[WebService generateCardID] substringFromIndex:5];
     return result;
 }
+
+/**
+ * openShorcutUrlInSafari - open a target url in safari.
+ * @url: target url you want to open in safari browser
+ *
+ * To let the user save the shortcut icon to homescreen, we have to guide them
+ * to the shortcut html and make them add it to homescreen.
+ */
+
 
 + (void)openShorcutUrlInSafari:(NSString *)url {
     
@@ -569,44 +628,8 @@ static NSString* AESKEY = @"thisistreasureshthisistreasuresh";
     [[UIApplication sharedApplication] openURL: request];
 }
 
-+ (NSString*)getCSRFFromCookie {
-    NSArray* cookies = [[NSHTTPCookieStorage sharedHTTPCookieStorage] cookiesForURL:[NSURL URLWithString:TREASUREBOWL_QRCODE_SERVER]];
-    NSString* strCookie = @"";
-    DE_LOG("cookie csrf %@", [[NSHTTPCookieStorage sharedHTTPCookieStorage] cookies]);
-    
-    for(NSHTTPCookie* cookie in cookies ) {
-        if([cookie.name isEqualToString:@"csrftoken"])
-            return cookie.value;
-    }
-    return strCookie;
-}
 
 
-#pragma mark Sharing methods
 
-- (BOOL)shareToFacebook:(UIImage *)image {
-    
-    if ([FBSDKMessengerSharer messengerPlatformCapabilities] & FBSDKMessengerPlatformCapabilityImage) {
-        [FBSDKMessengerSharer shareImage:image withOptions:nil];
-        return YES;
-    }
-    return NO;
-}
-
-- (BOOL)shareToLine:(UIImage *)image {
-    
-    UIPasteboard *pasteboard = [UIPasteboard pasteboardWithUniqueName];
-    NSString *pasteboardName = pasteboard.name;
-    [pasteboard setData:UIImagePNGRepresentation(image) forPasteboardType:@"treasurebowl"];
-    NSString *contentType = @"image";
-    NSString *contentKey = (__bridge_transfer NSString*)CFURLCreateStringByAddingPercentEscapes
-    (NULL, (CFStringRef)pasteboardName, NULL, CFSTR(":/?=,!$&'()*+;[]@#"),
-     CFStringConvertNSStringEncodingToEncoding(NSUTF8StringEncoding));
-    
-    NSString *urlString = [NSString stringWithFormat:@"line://msg/%@/%@",
-                           contentType, contentKey];
-    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:urlString]];
-    return NO;
-}
 
 @end

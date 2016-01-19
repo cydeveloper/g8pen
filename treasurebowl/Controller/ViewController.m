@@ -32,6 +32,7 @@
 
 MainMenu *mainMenu;
 AppStateManager* appStateManager;
+WebService* webservice;
 
 
 int SW ,SH; //screen width , screen height;
@@ -60,6 +61,7 @@ int SW ,SH; //screen width , screen height;
     [mainMenu initButton];
     
     appStateManager = [AppStateManager getSharedInstance];
+    webservice = [WebService getSharedInstance]; // initialize
     
     UILongPressGestureRecognizer *lpgr = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(handleLongPress:)];
     lpgr.minimumPressDuration = .5; //seconds

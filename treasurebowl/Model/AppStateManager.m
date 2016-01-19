@@ -13,6 +13,14 @@
 @implementation AppStateManager
 static AppStateManager* sharedInstance = nil;
 
+
+/*   Class : AppStateManager
+ *   A sharedInstance, it's purpose is to maintain
+ *   data that will be use in different view controller.
+ *   It also provide interface between DB and view controller
+ *   And also, we can update a property of icon or group by calling method here,
+ *   To update it in both db and app in one shot.
+ */
 + (AppStateManager*)getSharedInstance {
     if(!sharedInstance) {
         DE_LOG("APM init");
@@ -52,6 +60,15 @@ static AppStateManager* sharedInstance = nil;
 
 #pragma mark userdefault
 
+
+/**
+ * loadUserDefault - load user setting.
+ *
+ * RETURN user as the default setting
+ *
+ * Load user setting. The setting is listed in Supporting Files/UserDefault.plist
+ */
+
 - (NSUserDefaults*)loadUserDefault {
     NSUserDefaults* user = [NSUserDefaults standardUserDefaults];
     NSURL *defaultPrefsFile = [[NSBundle mainBundle]
@@ -62,30 +79,69 @@ static AppStateManager* sharedInstance = nil;
     return user;
 }
 
+/**
+ * setUserKey - change (key, value) pair in property list.
+ * @key: key of the property you want to set
+ * @value: yes, the value you want to set
+ *
+ * this is a general method that you can easy write defaule value into property list.
+ */
+
 - (void)setUserKey:(NSString *)key Value:(id)value {
     [self.userDefault setObject:value forKey:key];
     [self.userDefault synchronize];
 }
+
+/**
+ * setUserKey - change (key, value) pair in property list.
+ * @key: key of the property you want to set
+ * @value: integer value you want to set
+ *
+ * Same method as the one above. The only difference is that the value is specify as int.
+ */
 
 - (void)setUserKey:(NSString *)key IntValue:(NSInteger)value {
     [self.userDefault setInteger:value forKey:key];
     [self.userDefault synchronize];
 }
 
+/**
+ * setUserBlock - set how many icon will be displayed in a row.
+ * @block_num: number of icon per row
+ */
+
 - (void)setUserBlock:(NSInteger)block_num {
     self.block_num_setting = block_num;
     [self setUserKey:@"treasure_blocknum" IntValue:block_num];
 }
+
+/**
+ * setUserPhone - set the phone number of app user.
+ * @phone: phone number
+ */
 
 - (void)setUserPhone:(NSString *)phone {
     self.block_userphone = phone;
     [self setUserKey:@"treasure_userphone" Value:phone];
 }
 
+/**
+ * getUserKey - get value from the given key in property list.
+ * @key: key of the property you want to retrieve.
+ *
+ * RETURN: id of the setting
+ */
+
 - (id)getUserKey:(NSString *)key{
     return [self.userDefault objectForKey:key];
 }
 
+/**
+ * getUserKeyForInt - get int value from the given key in property list.
+ * @key: key of the property you want to retrieve.
+ *
+ * RETURN: int value of the setting
+ */
 - (NSInteger)getUserKeyForInt:(NSString *)key {
     return [self.userDefault integerForKey:key];
 }
@@ -110,7 +166,7 @@ static AppStateManager* sharedInstance = nil;
 
 #pragma mark retrieval methods
 /**
- * getIconFromDBByNameorID - search and retrieve icon from AppStateManager or db
+ * getIconFromBackendByNameorID - search and retrieve icon from AppStateManager or db
  * @name: the name of icon you want to search for
  * @ID: the id of icon you want to search for
  *
@@ -122,6 +178,8 @@ static AppStateManager* sharedInstance = nil;
 - (Icon*)getIconFromBackendByName:(NSString *)name orID:(NSInteger)ID{
     
     Icon* icon;
+    
+    // If ID > 0, then it means that he try to use ID as search key
     if(ID > 0) {
         icon = [self.iconDic_id objectForKey: INT_KEY(ID)];
     } else if(name) {
@@ -134,6 +192,7 @@ static AppStateManager* sharedInstance = nil;
         return icon;
     }
     
+    // DB support both search in DB and name
     icon = [self.db getIconByName: name ByIconID: ID];
     
     if(icon) {
@@ -142,6 +201,9 @@ static AppStateManager* sharedInstance = nil;
     return icon;
 }
 
+/**
+ * the following 2 method will call getIconFromBackend to perform operation.
+ */
 - (Icon*)getIconByID:(NSInteger)ID {
     return [self getIconFromBackendByName:nil orID:ID];
 }
@@ -149,6 +211,17 @@ static AppStateManager* sharedInstance = nil;
 - (Icon*)getIconByName:(NSString *)name {
     return [self getIconFromBackendByName: name orID:-1];
 }
+
+/**
+ * getGroupFromBackendByNameorID - search and retrieve icon from AppStateManager or db
+ * @name: the name of group you want to search for
+ * @ID: the id of group you want to search for
+ *
+ * RETURN: group or nil if not find it in db
+ *
+ * Search group by using either name or ID as key.
+ * If it's not in groupDic, and then search DB for it, and put it into app sate manager.
+ */
 
 - (Group*)getGroupFromBackendByName:(NSString *)name orID:(NSInteger) ID {
     Group* group;
@@ -171,7 +244,9 @@ static AppStateManager* sharedInstance = nil;
     }
     return group;
 }
-
+/**
+ * the following 2 method will call getGroupFromBackend to perform operation.
+ */
 - (Group*)getGroupByID:(NSInteger)ID {
     return [self getGroupFromBackendByName:nil orID: ID];
 }
@@ -181,6 +256,18 @@ static AppStateManager* sharedInstance = nil;
 }
 
 #pragma mark deletion methods
+
+/**
+ * deleteIconWithName - delete icon from db by name
+ * @name: the name of icon you want to delete
+ *
+ *
+ * It has 3 things to do.
+ * First is to remove it from AppStateManger,
+ * Second is to remove it from the group it belongs
+ * And the last steps, we delete it from DB.
+ *
+ */
 
 - (BOOL)deleteIconWithName:(NSString *)name {
     
@@ -204,6 +291,18 @@ static AppStateManager* sharedInstance = nil;
     
     return true;
 }
+
+/**
+ * deleteGroupWithName - delete group from db by name
+ * @name: the name of group you want to delete
+ *
+ *
+ * It has 3 things to do.
+ * First is to remove it from AppStateManger,
+ * Second is to kick out all the icon in it.
+ * And the last steps, we delete it from DB.
+ *
+ */
 
 - (BOOL)deleteGroupWithName:(NSString*)name {
     
@@ -232,17 +331,29 @@ static AppStateManager* sharedInstance = nil;
 
 #pragma mark create methods
 
+/**
+ * The following add methods are all in same routine :
+ * 1. Try to update DB
+ * 2. retrieve it's DB id
+ * 3. the add it to the AppStateManager list/dictionary
+ By doing this, we can always keep new icons in homescreen,
+ * without restart the app.
+ */
+
 - (BOOL)addNewIcon:(Icon *)icon toGroup:(Group *)group {
     
+    // try to update db
     if(!icon_update_db(icon)) {
         NSLog(@"addNewIcon: failed!");
         return NO;
     }
     
+    // retrieve its db id
     icon.icon_ID = ((Icon*)[self.db getIconByName:icon.name ByIconID: -1]).icon_ID;
-    iconlist_add(icon);
+    iconlist_add(icon); // add it into app state manager
     
     if(group) {
+        // if it belongs to a group, then put it in.
         icon_add_to_group_and_array(icon, group, YES);
     }
     
@@ -251,13 +362,15 @@ static AppStateManager* sharedInstance = nil;
 
 - (BOOL)addNewGroup:(Group *)group {
     
+    // try to update db.
     if(!group_update_db(group)) {
         NSLog(@"addNewGroup: failed!");
         return NO;
     }
     
+    // retrieve db id.
     group.group_ID = ((Group*)[self.db getGroupByName: group.name ByGroupID: -1]).group_ID;
-    grouplist_add(group);
+    grouplist_add(group); // add to app state manager
     return YES;
 }
 
@@ -275,6 +388,7 @@ static AppStateManager* sharedInstance = nil;
 
 - (BOOL)updateIcon:(Icon *)icon {
     
+    // update already exist icon, which id should be larget than 0
     if(icon && icon.icon_ID > 0) {
         icon_update_db(icon);
         return YES;
@@ -301,6 +415,15 @@ static AppStateManager* sharedInstance = nil;
 }
 
 #pragma mark iconModify methods
+/**
+ * addPhoneToIcon - add a phone number to target icon
+ * @icon: target icon
+ * @phone: phone number you want to add
+ *
+ * RETURN: success or not
+ *
+ * This method will update both icon and icon in db at the same time
+ */
 
 - (BOOL)addPhoneToIcon:(Icon *)icon Phone:(NSString *)phone {
     
@@ -320,14 +443,17 @@ static AppStateManager* sharedInstance = nil;
 
 #pragma mark relationModify methods
 
+/**
+ * The following method is use to modify both in memory
+ * and in db data.
+ */
 
 - (BOOL)iconJoinGroup:(Group *)group Icon:(Icon *)icon {
 
     if(!icon || !group) return NO;
     
+    // add Icon to a group, and this inline will also perform update in db
     icon_add_to_group_and_array(icon, group, YES);
-    // group_update_db(group);
-    
     return YES;
 }
 
@@ -335,17 +461,23 @@ static AppStateManager* sharedInstance = nil;
     
     if(!icon || !group) return NO;
     
+    // remove it from group, and update itself
     icon_remove_group(icon);
     group_remove_icon(group, icon);
     icon_update_db(icon);
-    // group_update_db(group);
     
     return YES;
 }
 
 #pragma mark privateObjectModify inlie
+
+/**
+ * the following inline is used to help us perform the add/remove operation to list/dictionary
+ * maintain in app state manager
+ */
 static inline void iconlist_add(Icon* icon) {
     
+    // add icon into iconList and iconDic maintained in AppstateManager
     if (![sharedInstance.iconDic_id objectForKey: INT_KEY(icon.icon_ID)]){
         
         if(!sharedInstance.iconList)
@@ -360,6 +492,7 @@ static inline void iconlist_add(Icon* icon) {
 
 static inline void grouplist_add(Group* group) {
     
+    // add group into groupList and groupDic maintained in AppstateManager
     if(![sharedInstance.groupDic_id objectForKey: INT_KEY(group.group_ID)]){
 
         if(!sharedInstance.groupList)
@@ -399,10 +532,13 @@ static inline void icon_add_to_group_and_array(Icon* icon, Group* group, BOOL to
     icon.group_ID = group.group_ID;
     [group.icons addObject: icon];
     if(toArray) {
+        // add it into group attribute
         if(!group.icons_id_array)
             group.icons_id_array = [[NSMutableArray alloc] init];
         
         [group.icons_id_array addObject: [NSString stringWithFormat: @"%d", (int)icon.icon_ID]];
+        
+        // update db
         group_update_db(group);
     }
 }
@@ -439,6 +575,7 @@ static inline BOOL card_update_db(Card* card) {
 
 - (void)loadIcon {
     
+    // retrieve all icon from db, and put it in iconDic
     self.iconList = [self.db getIcons];
     
     // load into iconDic for fast access.
@@ -450,18 +587,21 @@ static inline BOOL card_update_db(Card* card) {
 
 - (void)loadGroup {
 
+    // retrieve all group from db, and put it in groupDic
     self.groupList = [self.db getGroups];
     
     for (Group* group in self.groupList) {
         group.icons = [[NSMutableArray alloc] init];
         
         for(NSString* key in group.icons_id_array) {
-            NSLog(@"load from key : %@", key);
+            DE_LOG("load from key : %@", key);
+            
+            // put icon into group
             Icon* icon = [self.iconDic_id objectForKey: INT_KEY([key integerValue])];
             if(self.iconDic_id)
                 icon_add_to_group_and_array(icon, group, NO);
         }
-        NSLog(@"total %lu, %lu", [group.icons_id_array count], [group.icons count]);
+        DE_LOG("total %lu, %lu", [group.icons_id_array count], [group.icons count]);
         [self.groupDic_id setObject: group forKey: INT_KEY(group.group_ID)];
         [self.groupDic_name setObject: group forKey: group.name];
     }
